@@ -5,39 +5,47 @@ group: development
 
 # Using AngularJS in your plugin code
 
-If you already know AngularJS, developing {{site.productName}} plugins is 99% like developing any other Angular app, and this page will highlight the differences. If you don't know Angular, this page will bring you up to speed. In your JavaScript, you can register components (controllers, services, factories, directives, and filters) the same way you would in Angular. The main difference is you need to use a special `plugin`object (instead of an Angular module) to call any component registration functions. You also need to prepend all component names with your registered namespace.
+If you already know AngularJS, developing {{site.productName}} plugins is 99% like developing any other Angular app, and this page will highlight the differences. If you don't know Angular, this page will help bring you up to speed.
+
+In your JavaScript, you can register components (controllers, services, factories, directives, and filters) the same way you would in Angular. The main difference is you need to use a special `plugin` object (instead of an Angular module) to call any component registration functions. You also need to prepend all component names with your registered namespace.
 
 {% highlight js %}
 
 plugin
-    .controller('namespacedCntl', ['depService', function(depService) {
+    .service('myNamespaceService', ['depService', function(depService) {
         ...
     }])
-    .service('namespacedService', ['depService', function(depService) {
+    .controller('myNamespaceCntl', ['myNamespaceService', function(namespacedService) {
         ...
     }])
-    .factory('namespacedFactory', ['depService', function(depService) {
+    .factory('myNamespaceFactory', ['myNamespaceService', 'depService', function(namespacedService, depService) {
         ...
     }])
-    .directive('namespacedDirective', ['depService', function(depService) {
+    .directive('myNamespaceDirective', ['myNamespaceService', function(namespacedService) {
         ...
     }])
-    .filter('namespacedFilter', ['depService', function(depService) {
+    .filter('myNamespaceFilter', ['myNamespaceService', function(namespacedService) {
         ...
     }])
-    .constant('namespacedConstant', value);
+    .constant('myNamespaceConstant', value);
 
 {% endhighlight %}
 
 # Dependency Injection
 
-In order for components to get ahold of their dependencies, Angular wires everything using a [dependency injection](https://code.angularjs.org/{{site.angularVersion}}/docs/guide/di) subsystem. All of the components above (except for constants) were registered using [inline array annotation](https://code.angularjs.org/{{site.angularVersion}}/docs/guide/di#inline-array-annotation); you pass an array, whose elements consist of a list of strings (the names of the dependencies) followed by the factory function. Dependency injection is how you can wire your own components together, as well as how you can include external dependencies, such as services written by [AngularJS](angular-services.html), [{{site.productName}}]({{site.baseurl}}/plugins/api/services), and few [third parties]({{site.baseurl}}/plugins/third-party). 
+In order for components to get ahold of their dependencies, Angular wires everything using a [dependency injection]({{site.angularDomain}}/{{site.angularVersion}}/docs/guide/di) subsystem. All of the components above (except for constants) were registered using [inline array annotation]({{site.angularDomain}}/{{site.angularVersion}}/docs/guide/di#inline-array-annotation); you pass an array, whose elements consist of a list of strings (the names of the dependencies), followed by the factory function taking a set of dependency arguments that match the list of string names.
+
+The list of strings tell Angular which dependencies are required.  Angular then passes those dependencies into the function you define - then you can use them inside of your code however you like.
+
+Dependency injection is how you can wire your own components together, as well as how you can include external dependencies, such as services written by [AngularJS](angular-services.html), [{{site.productName}}]({{site.baseurl}}/plugins/api/services), and few [third parties]({{site.baseurl}}/plugins/third-party). 
 
 {% highlight js %}
 
-plugin.controller('namespacedCntl', ['$scope', '$someAngularService', 'znSomeZengineService', 'someThirdParty', 
-    function ($scope, $someAngularService, znSomeZengineService, someThirdPartyService) {
+plugin.controller('myNamespaceCntl', ['$scope', '$someAngularService', 'myNamespaceService', 'znSomeZengineService', 'someThirdParty', 
+    function ($scope, $someAngularService, myNamespaceService, znSomeZengineService, someThirdPartyService) {
     
+        myNamespaceService.foo('bar');
+
         ...
 
     }
@@ -48,13 +56,13 @@ plugin.controller('namespacedCntl', ['$scope', '$someAngularService', 'znSomeZen
 
 # Services
 
-If you want to write reusable business logic independent of views, you can create what's known in Angular as a [service](https://code.angularjs.org/{{site.angularVersion}}/docs/guide/services). Any component that uses the service will get a reference to the same singleton instance. There are two recipes for creating services: **Service** and **Factory**. The only difference between them is that **Service** recipe works better for objects of custom type, while **Factory** can produce JavaScript primitives and functions.
+If you want to write reusable business logic independent of views, you can create what's known in Angular as a [service]({{site.angularDomain}}/{{site.angularVersion}}/docs/guide/services). Any component that uses the service will get a reference to the same singleton instance. There are two recipes for creating services: **Service** and **Factory**. The only difference between them is that **Service** recipe works better for objects of custom type, while **Factory** can produce JavaScript primitives and functions.
 
 The first way to create a service is through the **Service** recipe. When you’re using a **Service**, it’s instantiated with the `new` keyword, so you can add properties to `this` and the service will return `this`. When you inject the service as a dependency into a component, those properties on `this` will now be available on that component through your service.
 
 {% highlight js %}
 
-plugin.service('namespacedService', ['depService', function (depService) {
+plugin.service('myNamespaceService', ['depService', function (depService) {
     
     var service = this;
 
@@ -72,7 +80,7 @@ The second way to create a service is through the **Factory** recipe. Unlike the
 
 {% highlight js %}
 
-plugin.factory('namespacedFactory', ['depService', function (depService) {
+plugin.factory('myNamespaceFactory', ['depService', function (depService) {
 
     var factory = {};
 
@@ -89,7 +97,7 @@ In additional to creating your own services, you can also use the [services prov
 
 # Directives
 
-Sometimes you want to attach a specified behavior to a DOM element. To do this, you can create [directives](https://code.angularjs.org/{{site.angularVersion}}/docs/guide/directive). Just register the directive in your plugin.js code the same way you would in Angular, except with the plugin object. 
+Sometimes you want to attach a specified behavior to a DOM element. To do this, you can create [directives]({{site.angularDomain}}/{{site.angularVersion}}/docs/guide/directive). Just register the directive in your plugin.js code the same way you would in Angular, except with the plugin object. 
 
 {% highlight js %}
 plugin.directive('myCustomer', ['depService', function(depService) {
@@ -106,7 +114,7 @@ plugin.directive('myCustomer', ['depService', function(depService) {
                 console.log(scope.firstName);
 
                 // 'element' is the jqLite-wrapped element that this directive matches.
-                // https://code.angularjs.org/{{site.angularVersion}}/docs/api/ng/function/angular.element
+                // {{site.angularDomain}}/{{site.angularVersion}}/docs/api/ng/function/angular.element
                 console.log(element.contents());
 
                 // 'attrs' is a hash object with key-value pairs
